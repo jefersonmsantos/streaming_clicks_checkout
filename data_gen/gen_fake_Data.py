@@ -101,10 +101,9 @@ def gen_clickstream_data(num_click_records: int) -> None:
         user_id = random.randint(1, 100)
         click_event = generate_click_event(user_id)
         push_to_pubsub(click_event, 'clicks')
-        print(click_event)
 
         # simulate multiple clicks & checkouts 50% of the time
-        while random.randint(1, 100) >= 50:
+        while random.randint(1, 100) >= 30:
             click_event = generate_click_event(
                 user_id, click_event['product_id']
             )
@@ -116,7 +115,7 @@ def gen_clickstream_data(num_click_records: int) -> None:
                 ),
                 'checkouts',
             )
-
+            print("---------CHECKOUT------------")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
