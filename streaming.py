@@ -6,45 +6,54 @@ from typing import Any, Dict, List
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
 
+
 table_spec = 'edc-igti-325912.checkouts_clicks.checkouts'
+r = redis.Redis(host='localhost', port=6379, decode_responses=True, password = "Redis2019!")
 
 class FindFirstClickAndCheckout(beam.DoFn):
-  def process(self, element):
-    clicks = element[1]['clicks']
-    sorted_clicks = sorted(clicks, key=lambda x: x['datetime_occured'])
+    def process(self, element):
+        clicks = element[1]['clicks']
+        sorted_clicks = sorted(clicks, key=lambda x: x['datetime_occured'])
 
-    if len(sorted_clicks)>0:
-       final_click = [sorted_clicks[0]]
-    else:
-       final_click=[]
+        if len(sorted_clicks)>0:
+            final_click = [sorted_clicks[0]]
+        else:
+            final_click=[]
 
-    checkout = element[1]['checkout']
-    sorted_checkout = sorted(checkout, key=lambda x: x['datetime_occured'])
+        checkout = element[1]['checkout']
+        sorted_checkout = sorted(checkout, key=lambda x: x['datetime_occured'])
 
-    if len(sorted_checkout)>0:
-       final_checkout = [sorted_checkout[0]]
-    else:
-       final_checkout=[]
+        if len(sorted_checkout)>0:
+            final_checkout = [sorted_checkout[0]]
+        else:
+            final_checkout=[]
 
-    new_element = [{"checkout":final_checkout,"clicks":final_click}]
-    return new_element
+        new_element = [{"checkout":final_checkout,"clicks":final_click}]
+        return new_element
 
 class SelectFields(beam.DoFn):
-  def process(self, element):
-     print(element)
-     checkout = element["checkout"][0]
-     clicks = element["clicks"][0]
+    def process(self, element):
+        #print(element)
+        checkout = element["checkout"][0]
+        clicks = element["clicks"][0]
 
-     record = {
+        record = {
         "checkout_id":str(checkout["checkout_id"]),
         "click_id":str(clicks["click_id"]),
         "user_id":str(checkout["user_id"]),
         "checkout_time":checkout["datetime_occured"],
         "click_time":clicks["datetime_occured"]
-     }
+        }
 
-     return [record]
+        return [record]
 
+class EnrichUserData(beam.DoFn):
+    def process(Self, element):
+        print(element['user_id'])
+        user = r.hgetall("user_"+element['user_id'])
+        element['user_name'] = user['user_name']
+
+        return [element]
   
 def parse_json_message(message: str) -> Dict[str, Any]:
     record = json.loads(message)
@@ -101,9 +110,10 @@ def run(
             ({"checkout":checkout,"clicks":clicks})
             | "checkout_click: Merge" >> beam.CoGroupByKey()
             | "Filter checkout" >> beam.Filter(lambda element: len(element[1]["checkout"])>0)
+            | "Filter clicks" >> beam.Filter(lambda element: len(element[1]["clicks"])>0)
             | "Filter first click" >> beam.ParDo(FindFirstClickAndCheckout())
-            
             | "Select fields to write" >> beam.ParDo(SelectFields())
+            | "Get user data" >> beam.ParDo(EnrichUserData())
             | "Write to BQ" >> beam.io.WriteToBigQuery(
                                 table_spec,
                                 write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
