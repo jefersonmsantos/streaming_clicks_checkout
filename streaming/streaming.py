@@ -8,7 +8,7 @@ from apache_beam.options.pipeline_options import PipelineOptions
 
 
 table_spec = 'edc-igti-325912.checkouts_clicks.checkouts'
-r = redis.Redis(host='localhost', port=6379, decode_responses=True, password = "Redis2019!")
+r = redis.Redis(host='redis', port=6379, decode_responses=True, password = "Redis2019!")
 
 class FindFirstClickAndCheckout(beam.DoFn):
     def process(self, element):

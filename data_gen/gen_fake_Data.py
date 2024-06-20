@@ -1,18 +1,26 @@
+import os
+
 import argparse
 import json
 import random
 import redis
 from datetime import datetime
 from google.cloud import pubsub_v1
+from google.oauth2 import service_account
 from uuid import uuid4
 
 #import psycopg2
 #from confluent_kafka import Producer
 from faker import Faker
 
-PROJECT_ID = 'edc-igti-325912'
-redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True, password = "Redis2019!")
+PROJECT_ID = os.environ['PROJECT_ID']
+REDIS_PASSWORD = os.environ['REDIS_PASSWORD']
+redis_client = redis.Redis(host='redis', port=6379, decode_responses=True, password = REDIS_PASSWORD)
 fake = Faker()
+
+dir = os.path.dirname(__file__)
+sa_file = os.path.join(dir, 'sa.json')
+credentials = service_account.Credentials.from_service_account_file(sa_file)
 
 def push_to_redis(id, entity,object):
     redis_client.hset(f'{entity}_{str(id)}', mapping=object)
@@ -92,7 +100,7 @@ def generate_checkout_event(user_id, product_id):
     return checkout_event
 
 def push_to_pubsub(event , topic):
-    publisher = pubsub_v1.PublisherClient()
+    publisher = pubsub_v1.PublisherClient(credentials=credentials)
     topic_name = f'projects/{PROJECT_ID}/topics/{topic}'
     publisher.publish(topic_name, json.dumps(event).encode('utf-8'))
 
