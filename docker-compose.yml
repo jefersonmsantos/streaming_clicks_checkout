@@ -24,7 +24,7 @@ services:
   streaming:
     build:
       context: ./streaming/
-    command: python -m /opt/streaming/streaming --runner DirectRunner  --clicks_input_subscription=projects/edc-igti-325912/subscriptions/clicks-sub --checkout_input_subscription=projects/edc-igti-325912/subscriptions/checkouts
+    command: python /opt/streaming/streaming.py --runner DirectRunner  --clicks_input_subscription=${CLICKS_INPUT_SUBSCRIPTION} --checkout_input_subscription=${CHECKOUT_INPUT_SUBSCRIPTION}
     volumes:
       - ./streaming:/opt/streaming
     container_name: streaming
@@ -32,5 +32,7 @@ services:
     environment:
       PROJECT_ID: ${PROJECT_ID}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
+      BIGQUERY_TABLE: ${BIGQUERY_TABLE}
+      GOOGLE_APPLICATION_CREDENTIALS: '/opt/streaming/sa.json'
     depends_on:
       - redis

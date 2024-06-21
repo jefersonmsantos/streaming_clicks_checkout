@@ -1,3 +1,4 @@
+import os
 import argparse
 import json
 import redis
@@ -6,9 +7,14 @@ from typing import Any, Dict, List
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
 
+# dir = os.path.dirname(__file__)
+# sa_file = os.path.join(dir, 'sa.json')
+# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = sa_file
 
-table_spec = 'edc-igti-325912.checkouts_clicks.checkouts'
-r = redis.Redis(host='redis', port=6379, decode_responses=True, password = "Redis2019!")
+TABLE_SPEC = os.environ["BIGQUERY_TABLE"]
+REDIS_PASSWORD = os.environ['REDIS_PASSWORD']
+
+r = redis.Redis(host='redis', port=6379, decode_responses=True, password = REDIS_PASSWORD)
 
 class FindFirstClickAndCheckout(beam.DoFn):
     def process(self, element):
@@ -51,7 +57,8 @@ class EnrichUserData(beam.DoFn):
     def process(Self, element):
         print(element['user_id'])
         user = r.hgetall("user_"+element['user_id'])
-        element['user_name'] = user['user_name']
+        if "user_name" in user.keys():
+            element['user_name'] = user['user_name']
 
         return [element]
   
@@ -115,7 +122,7 @@ def run(
             | "Select fields to write" >> beam.ParDo(SelectFields())
             | "Get user data" >> beam.ParDo(EnrichUserData())
             | "Write to BQ" >> beam.io.WriteToBigQuery(
-                                table_spec,
+                                TABLE_SPEC,
                                 write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
                                 create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER,
                                 method='STREAMING_INSERTS'
