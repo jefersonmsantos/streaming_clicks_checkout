@@ -7,12 +7,12 @@ from typing import Any, Dict, List
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
 
-# dir = os.path.dirname(__file__)
-# sa_file = os.path.join(dir, 'sa.json')
-# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = sa_file
-
-TABLE_SPEC = os.environ["BIGQUERY_TABLE"]
 REDIS_PASSWORD = os.environ['REDIS_PASSWORD']
+PROJECT_ID = os.environ['PROJECT_ID']
+BQ_DATASET = os.environ['BQ_DATASET']
+BQ_TABLE = os.environ['BQ_TABLE']
+
+table_ref = f'{PROJECT_ID}.{BQ_DATASET}.{BQ_TABLE}'
 
 r = redis.Redis(host='redis', port=6379, decode_responses=True, password = REDIS_PASSWORD)
 
@@ -122,7 +122,7 @@ def run(
             | "Select fields to write" >> beam.ParDo(SelectFields())
             | "Get user data" >> beam.ParDo(EnrichUserData())
             | "Write to BQ" >> beam.io.WriteToBigQuery(
-                                TABLE_SPEC,
+                                table_ref,
                                 write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
                                 create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER,
                                 method='STREAMING_INSERTS'
@@ -132,11 +132,7 @@ def run(
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    # parser.add_argument(
-    #     "--output_table",
-    #     help="Output BigQuery table for results specified as: "
-    #     "PROJECT:DATASET.TABLE or DATASET.TABLE.",
-    # )
+
     parser.add_argument(
         "--clicks_input_subscription",
         help="Input PubSub subscription of the form "
@@ -153,16 +149,7 @@ if __name__ == "__main__":
         type=int,
         help="Window interval in seconds for grouping incoming messages.",
     )
-    # parser.add_argument(
-    #     "--role_id",
-    #     default=60,
-    #     help="Role ID",
-    # )
-    # parser.add_argument(
-    #     "--secret_id",
-    #     default=60,
-    #     help="Secret ID",
-    # )
+
     args, beam_args = parser.parse_known_args()
 
     run(

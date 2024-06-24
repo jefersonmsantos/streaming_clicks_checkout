@@ -21,6 +21,32 @@ services:
     depends_on:
       - redis
   
+  create_bq_table:
+    build:
+      context: ./create_bigquery_table/
+    command: python /opt/create_bigquery_table/create_bq_table.py
+    volumes:
+      - ./create_bigquery_table:/opt/create_bigquery_table
+    container_name: create_bq_table
+    restart: on-failure
+    environment:
+      PROJECT_ID: ${PROJECT_ID}
+      BQ_DATASET: ${BQ_DATASET}
+      BQ_TABLE: ${BQ_TABLE}
+
+  create_pubsub:
+    build:
+      context: ./create_pubsub/
+    command: python /opt/create_pubsub/create_pubsub.py
+    volumes:
+      - ./create_pubsub:/opt/create_pubsub
+    container_name: create_pubsub
+    restart: on-failure
+    environment:
+      PROJECT_ID: ${PROJECT_ID}
+      CLICK_TOPIC: ${CLICK_TOPIC}
+      CHECKOUT_TOPIC: ${CHECKOUT_TOPIC}
+  
   streaming:
     build:
       context: ./streaming/
@@ -31,8 +57,11 @@ services:
     restart: on-failure
     environment:
       PROJECT_ID: ${PROJECT_ID}
+      BQ_DATASET: ${BQ_DATASET}
+      BQ_TABLE: ${BQ_TABLE}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-      BIGQUERY_TABLE: ${BIGQUERY_TABLE}
       GOOGLE_APPLICATION_CREDENTIALS: '/opt/streaming/sa.json'
     depends_on:
       - redis
+      - create_bq_table
+      - create_pubsub
