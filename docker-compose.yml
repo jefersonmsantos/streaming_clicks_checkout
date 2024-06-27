@@ -50,7 +50,7 @@ services:
   streaming:
     build:
       context: ./streaming/
-    command: python /opt/streaming/streaming.py --runner DirectRunner  --clicks_input_subscription=${CLICKS_INPUT_SUBSCRIPTION} --checkout_input_subscription=${CHECKOUT_INPUT_SUBSCRIPTION}
+    command: python /opt/streaming/streaming.py --runner DirectRunner  --clicks_input_subscription=projects/${PROJECT_ID}/subscriptions/${CLICK_TOPIC} --checkout_input_subscription=projects/${PROJECT_ID}/subscriptions/${CHECKOUT_TOPIC}
     volumes:
       - ./streaming:/opt/streaming
     container_name: streaming
@@ -62,6 +62,9 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       GOOGLE_APPLICATION_CREDENTIALS: '/opt/streaming/sa.json'
     depends_on:
-      - redis
-      - create_bq_table
-      - create_pubsub
+      redis:
+        condition: service_started
+      create_bq_table:
+        condition: service_completed_successfully
+      create_pubsub:
+        condition: service_completed_successfully
