@@ -1,3 +1,4 @@
 env/
 sa.json
 .env
+__pycache__/
