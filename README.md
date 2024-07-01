@@ -2,7 +2,7 @@
 
 This project is a streaming data pipeline to process first click attribution for e-commerce checkout. Objective it to identify, real time, for every product purchased, the click that led to this purchase. There are multiple tipes of [attributions](https://www.shopify.com/blog/marketing-attribution#3) on e-commerce business.
 
-This proejct is inspired on [this post](https://www.startdataengineering.com/post/data-engineering-project-for-beginners-stream-edition/) and recreated using different stack.
+This project is inspired on [this post](https://www.startdataengineering.com/post/data-engineering-project-for-beginners-stream-edition/) and recreated using different stack.
 
 Processing pipeline is created using apache beam with python SDK and executed on a docker container.
 
@@ -15,7 +15,7 @@ This project consists of:
 - Apache beam pipeline that reads messages from clicks and checkout Pub / Sub, enrich with information from users, makes attribution of first click to checkout and stores it on Google Bigquery
 - Google Bigquery table to store final data
 
-Image
+![alt text](image.png)
 
 
 Above architecture is generated with help from five docker containers orchestrated with docker-compose:
@@ -34,16 +34,17 @@ Above architecture is generated with help from five docker containers orchestrat
 
 1. Create a project on GCP console
 2. Create a service-account on this project, with the following permissions:
+    - Pub/Sub Admin
+    - Bigquery Data Editor
+    - Bigquery Job User
 
 3. Generate a json key for this service account, and save it inside folders:
+    - streaming
+    - create_bigquery_table
+    - create_pubsub
+    - data_gen
 
 4. Execute command:
 ```
 docker-compose up -d
 ```
-
-
-## Business-oriented docs
-
-
-## Contributing
