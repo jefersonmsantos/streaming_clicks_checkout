@@ -1,6 +1,6 @@
 # First click stream processing
 
-This project is a streaming data pipeline to process first click attribution for e-commerce checkout. Objective it to identify, real time, for every product purchased, the click that led to this purchase. There are multiple tipes of [attributions](https://www.shopify.com/blog/marketing-attribution#3) on e-commerce business.
+This project is a streaming data pipeline to process first click attribution for e-commerce checkout. Its goal is it to identify, real time, for every product purchased, the click that led to this purchase. There are multiple tipes of [attributions](https://www.shopify.com/blog/marketing-attribution#3) on e-commerce business.
 
 This project is inspired on [this post](https://www.startdataengineering.com/post/data-engineering-project-for-beginners-stream-edition/) and recreated using different stack.
 
