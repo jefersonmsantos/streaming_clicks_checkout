@@ -12,7 +12,7 @@ This project consists of:
 - data_gen python script, which generate fake data for users, clicks and checkouts. This replaces applications on a production environment, which will be generating the actions executed by users;
 - Google Pub/Sub topics, which receive events for clicks and checkouts as messages to be processed;
 - Redis cluster to store data from users to be used as enrichment on attribution pipeline
-- Apache beam pipeline that reads messages from clicks and checkout Pub / Sub, enrich with information from users, makes attribution of first click to checkout and stores it on Google Bigquery
+- Apache beam streaming / real-time pipeline that reads messages from clicks and checkout Pub / Sub, enrich with information from users, makes attribution of first click to checkout and stores it on Google Bigquery
 - Google Bigquery table to store final data
 
 ![alt text](image.png)
