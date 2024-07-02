@@ -59,6 +59,7 @@ class EnrichUserData(beam.DoFn):
         user = r.hgetall("user_"+element['user_id'])
         if "user_name" in user.keys():
             element['user_name'] = user['user_name']
+        element['_CHANGE_TYPE'] = 'UPSERT'
 
         return [element]
   
@@ -113,6 +114,8 @@ def run(
             )
         )
 
+        table_schema = 'checkout_id:STRING, click_id:STRING, user_id:STRING, checkout_time:STRING, click_time:STRING, user_name:STRING'
+
         checkout_click = (
             ({"checkout":checkout,"clicks":clicks})
             | "checkout_click: Merge" >> beam.CoGroupByKey()
@@ -123,9 +126,10 @@ def run(
             | "Get user data" >> beam.ParDo(EnrichUserData())
             | "Write to BQ" >> beam.io.WriteToBigQuery(
                                 table_ref,
+                                schema = table_schema,
                                 write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
                                 create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER,
-                                method='STREAMING_INSERTS'
+                                method=beam.io.WriteToBigQuery.Method.STORAGE_WRITE_API
                            )
         )
 

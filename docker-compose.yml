@@ -34,18 +34,18 @@ services:
       BQ_DATASET: ${BQ_DATASET}
       BQ_TABLE: ${BQ_TABLE}
 
-  create_pubsub:
-    build:
-      context: ./create_pubsub/
-    command: python /opt/create_pubsub/create_pubsub.py
-    volumes:
-      - ./create_pubsub:/opt/create_pubsub
-    container_name: create_pubsub
-    restart: on-failure
-    environment:
-      PROJECT_ID: ${PROJECT_ID}
-      CLICK_TOPIC: ${CLICK_TOPIC}
-      CHECKOUT_TOPIC: ${CHECKOUT_TOPIC}
+  # create_pubsub:
+  #   build:
+  #     context: ./create_pubsub/
+  #   command: python /opt/create_pubsub/create_pubsub.py
+  #   volumes:
+  #     - ./create_pubsub:/opt/create_pubsub
+  #   container_name: create_pubsub
+  #   restart: on-failure
+  #   environment:
+  #     PROJECT_ID: ${PROJECT_ID}
+  #     CLICK_TOPIC: ${CLICK_TOPIC}
+  #     CHECKOUT_TOPIC: ${CHECKOUT_TOPIC}
   
   streaming:
     build:
@@ -66,5 +66,5 @@ services:
         condition: service_started
       create_bq_table:
         condition: service_completed_successfully
-      create_pubsub:
-        condition: service_completed_successfully
+      #create_pubsub:
+      #  condition: service_completed_successfully

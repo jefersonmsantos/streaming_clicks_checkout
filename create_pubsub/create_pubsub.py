@@ -2,9 +2,14 @@ import os
 from google.oauth2 import service_account
 from google.cloud import pubsub_v1
 
-PROJECT_ID = os.environ['PROJECT_ID']
-CLICK_TOPIC = os.environ['CLICK_TOPIC']
-CHECKOUT_TOPIC = os.environ['CHECKOUT_TOPIC']
+#PROJECT_ID = os.environ['PROJECT_ID']
+#CLICK_TOPIC = os.environ['CLICK_TOPIC']
+#CHECKOUT_TOPIC = os.environ['CHECKOUT_TOPIC']
+
+PROJECT_ID='edc-igti-325912'
+REDIS_PASSWORD='Redis2019!'
+CLICK_TOPIC='clicks'
+CHECKOUT_TOPIC='checkout'
 
 dir = os.path.dirname(__file__)
 sa_file = os.path.join(dir, 'sa.json')

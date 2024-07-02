@@ -8,9 +8,6 @@ from datetime import datetime
 from google.cloud import pubsub_v1
 from google.oauth2 import service_account
 from uuid import uuid4
-
-#import psycopg2
-#from confluent_kafka import Producer
 from faker import Faker
 
 PROJECT_ID = os.environ['PROJECT_ID']
