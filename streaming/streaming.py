@@ -7,10 +7,15 @@ from typing import Any, Dict, List
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
 
-REDIS_PASSWORD = os.environ['REDIS_PASSWORD']
-PROJECT_ID = os.environ['PROJECT_ID']
-BQ_DATASET = os.environ['BQ_DATASET']
-BQ_TABLE = os.environ['BQ_TABLE']
+# REDIS_PASSWORD = os.environ['REDIS_PASSWORD']
+# PROJECT_ID = os.environ['PROJECT_ID']
+# BQ_DATASET = os.environ['BQ_DATASET']
+# BQ_TABLE = os.environ['BQ_TABLE']
+
+PROJECT_ID='edc-igti-325912'
+REDIS_PASSWORD='Redis2019!'
+BQ_DATASET='checkouts_clicks'
+BQ_TABLE='checkouts'
 
 table_ref = f'{PROJECT_ID}.{BQ_DATASET}.{BQ_TABLE}'
 
@@ -55,10 +60,10 @@ class SelectFields(beam.DoFn):
 
 class EnrichUserData(beam.DoFn):
     def process(Self, element):
-        print(element['user_id'])
-        user = r.hgetall("user_"+element['user_id'])
-        if "user_name" in user.keys():
-            element['user_name'] = user['user_name']
+        # print(element['user_id'])
+        # user = r.hgetall("user_"+element['user_id'])
+        # if "user_name" in user.keys():
+        element['user_name'] = ''
         element['_CHANGE_TYPE'] = 'UPSERT'
 
         return [element]
@@ -79,7 +84,7 @@ def run(
         clicks = (
             pipeline
             | "Read from Pub/Sub - Clicks"
-            >> beam.io.ReadFromPubSub(
+            >> beam.io.gcp.pubsub.ReadFromPubSub(
                 subscription=clicks_input_subscription
             ).with_output_types(bytes)
             | "UTF-8 bytes to string - Clicks" >> beam.Map(lambda msg: msg.decode("utf-8"))

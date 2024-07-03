@@ -118,7 +118,7 @@ def gen_clickstream_data(num_click_records: int) -> None:
                 generate_checkout_event(
                     click_event["user_id"], click_event["product_id"]
                 ),
-                'checkouts',
+                'checkout',
             )
             print("---------CHECKOUT------------")
 

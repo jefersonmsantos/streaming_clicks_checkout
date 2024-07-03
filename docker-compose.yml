@@ -21,18 +21,18 @@ services:
     depends_on:
       - redis
   
-  create_bq_table:
-    build:
-      context: ./create_bigquery_table/
-    command: python /opt/create_bigquery_table/create_bq_table.py
-    volumes:
-      - ./create_bigquery_table:/opt/create_bigquery_table
-    container_name: create_bq_table
-    restart: on-failure
-    environment:
-      PROJECT_ID: ${PROJECT_ID}
-      BQ_DATASET: ${BQ_DATASET}
-      BQ_TABLE: ${BQ_TABLE}
+  # create_bq_table:
+  #   build:
+  #     context: ./create_bigquery_table/
+  #   command: python /opt/create_bigquery_table/create_bq_table.py
+  #   volumes:
+  #     - ./create_bigquery_table:/opt/create_bigquery_table
+  #   container_name: create_bq_table
+  #   restart: on-failure
+  #   environment:
+  #     PROJECT_ID: ${PROJECT_ID}
+  #     BQ_DATASET: ${BQ_DATASET}
+  #     BQ_TABLE: ${BQ_TABLE}
 
   # create_pubsub:
   #   build:
@@ -46,25 +46,52 @@ services:
   #     PROJECT_ID: ${PROJECT_ID}
   #     CLICK_TOPIC: ${CLICK_TOPIC}
   #     CHECKOUT_TOPIC: ${CHECKOUT_TOPIC}
-  
-  streaming:
-    build:
-      context: ./streaming/
-    command: python /opt/streaming/streaming.py --runner DirectRunner  --clicks_input_subscription=projects/${PROJECT_ID}/subscriptions/${CLICK_TOPIC} --checkout_input_subscription=projects/${PROJECT_ID}/subscriptions/${CHECKOUT_TOPIC}
-    volumes:
-      - ./streaming:/opt/streaming
-    container_name: streaming
-    restart: on-failure
-    environment:
-      PROJECT_ID: ${PROJECT_ID}
-      BQ_DATASET: ${BQ_DATASET}
-      BQ_TABLE: ${BQ_TABLE}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      GOOGLE_APPLICATION_CREDENTIALS: '/opt/streaming/sa.json'
-    depends_on:
-      redis:
-        condition: service_started
-      create_bq_table:
-        condition: service_completed_successfully
-      #create_pubsub:
-      #  condition: service_completed_successfully
+  # jobmanager:
+  #   image: flink:latest
+  #   ports:
+  #     - "8081:8081"
+  #   command: jobmanager
+  #   environment:
+  #     - |
+  #       FLINK_PROPERTIES=
+  #       jobmanager.rpc.address: jobmanager        
+
+  # taskmanager:
+  #   image: flink:latest
+  #   depends_on:
+  #     - jobmanager
+  #   command: taskmanager
+  #   scale: 1
+  #   environment:
+  #     - |
+  #       FLINK_PROPERTIES=
+  #       jobmanager.rpc.address: jobmanager
+  #       taskmanager.numberOfTaskSlots: 2          
+
+  # streaming:
+  #   build:
+  #     context: ./streaming/
+  #   #command: python /opt/streaming/streaming.py --runner FlinkRunner --flink_master localhost:8081 --clicks_input_subscription=projects/${PROJECT_ID}/subscriptions/${CLICK_TOPIC} --checkout_input_subscription=projects/${PROJECT_ID}/subscriptions/${CHECKOUT_TOPIC}
+  #   #command: python /opt/streaming/streaming.py --runner DataflowRunner --project ${PROJECT_ID} --region us-central1 --streaming true --temp_location gs://dataflow-checkouts --clicks_input_subscription=projects/${PROJECT_ID}/subscriptions/${CLICK_TOPIC} --checkout_input_subscription=projects/${PROJECT_ID}/subscriptions/${CHECKOUT_TOPIC}
+  #   command: python streaming.py --runner dataflow --project ${PROJECT_ID} --region us-central1 --streaming true --max_num_workers 1 --temp_location gs://dataflow-checkouts --experiment use_unsupported_python_version --clicks_input_subscription=projects/${PROJECT_ID}/subscriptions/${CLICK_TOPIC} --checkout_input_subscription=projects/${PROJECT_ID}/subscriptions/${CHECKOUT_TOPIC}
+  #   volumes:
+  #     - ./streaming:/opt/streaming
+  #   container_name: streaming
+  #   restart: on-failure
+  #   environment:
+  #     PROJECT_ID: ${PROJECT_ID}
+  #     BQ_DATASET: ${BQ_DATASET}
+  #     BQ_TABLE: ${BQ_TABLE}
+  #     REDIS_PASSWORD: ${REDIS_PASSWORD}
+  #     GOOGLE_APPLICATION_CREDENTIALS: '/opt/streaming/sa.json'
+  #   depends_on:
+  #     redis:
+  #       condition: service_started
+  #     # jobmanager:
+  #     #   condition: service_started
+  #     # taskmanager:
+  #     #   condition: service_started
+  #     create_bq_table:
+  #       condition: service_completed_successfully
+  #     #create_pubsub:
+  #     #  condition: service_completed_successfully
